@@ -1,9 +1,7 @@
 package su.afk.kemonos.profile.data.repository
 
+import su.afk.kemonos.auth.IsAuthSiteUseCase
 import kotlinx.coroutines.flow.first
-import su.afk.kemonos.auth.IsAuthCoomerUseCase
-import su.afk.kemonos.auth.IsAuthKemonoUseCase
-import su.afk.kemonos.auth.IsAuthPawchiveUseCase
 import su.afk.kemonos.data.dto.PostUnifiedDto.Companion.toDomain
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
@@ -21,22 +19,16 @@ import su.afk.kemonos.storage.api.repository.localLikes.IStoreLocalLikedPostsRep
 import javax.inject.Inject
 
 internal class FavoritesRepository @Inject constructor(
-    private val api: FavoritesApi,
+    private val apis: Map<SelectedSite, @JvmSuppressWildcards FavoritesApi>,
     private val artistsStore: IStoreFavoriteArtistsRepository,
     private val postsStore: IStoreFavoritePostsRepository,
     private val localLikedPostsStore: IStoreLocalLikedPostsRepository,
     private val localLikedArtistsStore: IStoreLocalLikedArtistsRepository,
-    private val isAuthKemonoUseCase: IsAuthKemonoUseCase,
-    private val isAuthCoomerUseCase: IsAuthCoomerUseCase,
-    private val isAuthPawchiveUseCase: IsAuthPawchiveUseCase,
+    private val isAuthSiteUseCase: IsAuthSiteUseCase,
 ) : IFavoritesRepository {
 
     private suspend fun isAuthorized(site: SelectedSite): Boolean {
-        return when (site) {
-            SelectedSite.C -> isAuthCoomerUseCase().first()
-            SelectedSite.K -> isAuthKemonoUseCase().first()
-            SelectedSite.P -> isAuthPawchiveUseCase().first()
-        }
+        return isAuthSiteUseCase(site).first()
     }
 
     /**
@@ -126,7 +118,7 @@ internal class FavoritesRepository @Inject constructor(
 
     /** Принудительно обновляет favorite artists из сети и полностью синхронизирует Room-кэш. */
     override suspend fun refreshFavoriteArtists(site: SelectedSite): List<FavoriteArtist> {
-        api.getFavoriteArtists().call { list ->
+        apis.getValue(site).getFavoriteArtists().call { list ->
             val network = list.map { it.toDomain() }
             artistsStore.replaceAll(site, network)
             return network
@@ -146,7 +138,7 @@ internal class FavoritesRepository @Inject constructor(
             return postsStore.getAll(site)
         }
 
-        return api.getFavoritePosts().call { list ->
+        return apis.getValue(site).getFavoritePosts().call { list ->
             val network = list.map { it.toDomain() }
             postsStore.replaceAll(site, network)
             network
@@ -168,7 +160,7 @@ internal class FavoritesRepository @Inject constructor(
         var synced = false
         pending.forEach { post ->
             val success = runCatching {
-                api.addFavoritePost(
+                apis.getValue(site).addFavoritePost(
                     service = post.service,
                     creatorId = post.userId,
                     postId = post.id,
@@ -198,7 +190,7 @@ internal class FavoritesRepository @Inject constructor(
         var synced = false
         pending.forEach { artist ->
             val success = runCatching {
-                api.addFavoriteCreator(service = artist.service, id = artist.id).isSuccessful
+                apis.getValue(site).addFavoriteCreator(service = artist.service, id = artist.id).isSuccessful
             }.getOrDefault(false)
 
             if (success) {

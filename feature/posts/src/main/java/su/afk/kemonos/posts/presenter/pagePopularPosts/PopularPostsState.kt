@@ -24,6 +24,8 @@ internal class PopularPostsState {
 
         val popularPeriod: Period = Period.RECENT,
         val popularDateForPopular: String? = null,
+
+        /** Источник не отдаёт популярное (см. SiteCapabilities.popularPosts). */
         val popularUnsupported: Boolean = false,
 
         val uiSettingModel: UiSettingModel = UiSettingModel(),

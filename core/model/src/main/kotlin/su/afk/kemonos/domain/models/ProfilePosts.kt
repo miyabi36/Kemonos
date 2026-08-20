@@ -65,6 +65,12 @@ data class AttachmentDomain(
     val server: String?,
     val path: String,
     val name: String?,
+
+    /**
+     * Готовый путь к превью, если источник не выводит его из [path].
+     * null — превью строится по правилам источника (kemono: /thumbnail/data{path}).
+     */
+    val thumbnailPath: String? = null,
 )
 
 @Serializable
@@ -73,6 +79,9 @@ data class PreviewDomain(
     val path: String?,
     val name: String?,
     val type: String?,
+
+    /** Готовый путь превью, если источник не выводит его из [path]. */
+    val thumbnailPath: String? = null,
     val url: String? = null,
     val subject: String? = null,
     val description: String? = null
@@ -82,7 +91,14 @@ data class PreviewDomain(
 data class VideoDomain(
     val server: String,
     val path: String,
-    val name: String
+    val name: String,
+
+    /** Готовое превью источника: не нужно ни внешнего сервера, ни декодирования кадра. */
+    val thumbnailPath: String? = null,
+
+    /** Длительность и размер, если источник отдаёт их вместе с вложением. */
+    val durationMs: Long? = null,
+    val sizeBytes: Long? = null,
 )
 
 @Serializable

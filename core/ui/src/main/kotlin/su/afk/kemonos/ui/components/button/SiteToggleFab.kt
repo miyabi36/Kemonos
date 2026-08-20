@@ -46,6 +46,7 @@ fun SiteToggleFab(
                     SelectedSite.K -> R.drawable.kemono_logo
                     SelectedSite.C -> R.drawable.coomer_logo
                     SelectedSite.P -> R.drawable.pawchive_logo
+                    SelectedSite.O -> R.drawable.onlyhaven_logo
                 }
             ),
             modifier = Modifier

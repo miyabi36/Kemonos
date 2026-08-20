@@ -20,6 +20,10 @@ import su.afk.kemonos.creatorProfile.data.dto.profileTags.TagDto.Companion.toDom
 import su.afk.kemonos.creatorProfile.domain.repository.ICreatorsRepository
 import su.afk.kemonos.creatorProfile.util.Utils.queryKey
 import su.afk.kemonos.data.dto.PostUnifiedDto.Companion.toDomain
+import su.afk.kemonos.data.dto.onlyhaven.OnlyHavenPostDto.Companion.toDomain as toOnlyHavenDomain
+import su.afk.kemonos.preferences.domainResolver.IDomainResolver
+import su.afk.kemonos.domain.capabilities
+import su.afk.kemonos.creatorProfile.data.dto.onlyhaven.OnlyHavenSimilarCreatorDto.Companion.toDomain as toOnlyHavenSimilarDomain
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
 import su.afk.kemonos.domain.models.Tag
@@ -40,6 +44,7 @@ internal class CreatorsRepository @Inject constructor(
     private val cacheJson: CreatorProfileCacheJson,
     private val postsCache: IStorageCreatorPostsRepository,
     private val selectedSiteUseCase: ISelectedSiteUseCase,
+    private val domainResolver: IDomainResolver,
 ) : ICreatorsRepository {
     companion object {
         private const val COMMUNITY_PAGE_SIZE = 150
@@ -61,26 +66,36 @@ internal class CreatorsRepository @Inject constructor(
 
         val apiOffset = if (offset == 0) null else offset
 
-        val response = if (site == SelectedSite.P) {
-            api.getPawchiveProfilePosts(
+        /** Форма ответа у источников разная, поэтому домен собирает каждая ветка сама. */
+        val net = when (site) {
+            SelectedSite.O -> api.getOnlyHavenProfilePosts(
                 service = service,
                 id = id,
                 search = search,
-                tag = tag,
                 offset = apiOffset,
-            )
-        } else {
-            api.getProfilePosts(
-                service = service,
-                id = id,
-                search = search,
-                tag = tag,
-                offset = apiOffset,
-            )
-        }
+            ).call { page ->
+                val fileBaseUrl = domainResolver.hostConfig(site).fileBaseUrl
+                page.posts.orEmpty().map {
+                    /** В элементах списка автора creatorId не приходит. */
+                    it.toOnlyHavenDomain(fileBaseUrl = fileBaseUrl, creatorIdFallback = id)
+                }
+            }
 
-        val net = response.call { list ->
-            list.map { it.toDomain() }
+            SelectedSite.P -> api.getPawchiveProfilePosts(
+                service = service,
+                id = id,
+                search = search,
+                tag = tag,
+                offset = apiOffset,
+            ).call { list -> list.map { it.toDomain() } }
+
+            else -> api.getProfilePosts(
+                service = service,
+                id = id,
+                search = search,
+                tag = tag,
+                offset = apiOffset,
+            ).call { list -> list.map { it.toDomain() } }
         }
 
         postsCache.putPage(site, qk, offset, net)
@@ -114,6 +129,7 @@ internal class CreatorsRepository @Inject constructor(
     /** Tags профиля (кэш 7 дней) */
     override suspend fun getProfileTags(service: String, id: String): List<Tag> {
         val site = selectedSiteUseCase.getSite()
+        if (!site.capabilities.profileExtras) return emptyList()
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.TAGS)
             ?.let { return cacheJson.tagsFromJson(it) }
 
@@ -138,6 +154,7 @@ internal class CreatorsRepository @Inject constructor(
     /** Announcements профиля (кэш 7 дней) */
     override suspend fun getProfileAnnouncements(service: String, id: String): List<ProfileAnnouncement> {
         val site = selectedSiteUseCase.getSite()
+        if (!site.capabilities.profileExtras) return emptyList()
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.ANNOUNCEMENTS)
             ?.let { return cacheJson.announcementsFromJson(it) }
 
@@ -162,6 +179,7 @@ internal class CreatorsRepository @Inject constructor(
     /** FanCards профиля (кэш 7 дней) */
     override suspend fun getProfileFanCards(service: String, id: String): List<ProfileFanCard> {
         val site = selectedSiteUseCase.getSite()
+        if (!site.capabilities.profileExtras) return emptyList()
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.FANCARDS)
             ?.let { return cacheJson.fanCardsFromJson(it) }
 
@@ -186,6 +204,7 @@ internal class CreatorsRepository @Inject constructor(
     /** Links профиля (кэш 7 дней) */
     override suspend fun getProfileLinks(service: String, id: String): List<ProfileLink> {
         val site = selectedSiteUseCase.getSite()
+        if (!site.capabilities.profileExtras) return emptyList()
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.LINKS)
             ?.let { return cacheJson.linksFromJson(it) }
 
@@ -213,10 +232,17 @@ internal class CreatorsRepository @Inject constructor(
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.SIMILAR)
             ?.let { return cacheJson.similarFromJson(it) }
 
-        val fromNet = safeCallOrNull(
-            api = { api.getProfileRecommended(service, id) },
-            mapper = { dto -> dto.toDomain() }
-        )
+        val fromNet = if (site == SelectedSite.O) {
+            safeCallOrNull(
+                api = { api.getOnlyHavenSimilar(service, id) },
+                mapper = { page -> page.creators.orEmpty().map { it.toOnlyHavenSimilarDomain() } }
+            )
+        } else {
+            safeCallOrNull(
+                api = { api.getProfileRecommended(service, id) },
+                mapper = { dto -> dto.toDomain() }
+            )
+        }
 
         if (fromNet != null) {
             cacheStore.putJson(
@@ -232,6 +258,8 @@ internal class CreatorsRepository @Inject constructor(
     }
 
     override suspend fun getProfileCommunityChannels(service: String, id: String): List<CommunityChannel> {
+        if (!selectedSiteUseCase.getSite().capabilities.profileExtras) return emptyList()
+
         communityCacheStore.getFreshJsonOrNull(service, id, CommunityCacheType.CHANNELS)
             ?.let { return cacheJson.communityChannelsFromJson(it) }
 

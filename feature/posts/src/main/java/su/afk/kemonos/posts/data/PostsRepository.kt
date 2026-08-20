@@ -2,15 +2,22 @@ package su.afk.kemonos.posts.data
 
 import kotlinx.coroutines.CancellationException
 import su.afk.kemonos.data.dto.PostUnifiedDto.Companion.toDomain
+import su.afk.kemonos.data.dto.onlyhaven.OnlyHavenPostDto.Companion.toDomain as toOnlyHavenDomain
+import su.afk.kemonos.posts.data.dto.onlyhaven.OnlyHavenDmDto.Companion.toDomain
+import su.afk.kemonos.preferences.domainResolver.IDomainResolver
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
 import su.afk.kemonos.network.util.call
+import su.afk.kemonos.posts.api.popular.PopularInfo
+import su.afk.kemonos.posts.api.popular.PopularProps
+import java.time.LocalDate
 import su.afk.kemonos.posts.api.popular.PopularPosts
 import su.afk.kemonos.posts.api.tags.Tags
 import su.afk.kemonos.posts.api.tags.Tags.Companion.normalizeTags
 import su.afk.kemonos.posts.data.api.PostsApi
 import su.afk.kemonos.posts.data.dto.dms.toDomain
 import su.afk.kemonos.posts.data.dto.hashLookup.toDomain
+import su.afk.kemonos.posts.data.dto.popular.pawchive.parsePawchivePopularHtml
 import su.afk.kemonos.posts.data.dto.popular.request.toDto
 import su.afk.kemonos.posts.data.dto.popular.response.PopularPostsDto.Companion.toDomain
 import su.afk.kemonos.posts.data.dto.random.RandomDto.Companion.toDomain
@@ -27,13 +34,20 @@ import su.afk.kemonos.storage.api.repository.tags.IStoreTagsRepository
 import su.afk.kemonos.utils.posts.buildPostsQueryKey
 import javax.inject.Inject
 
+private const val ONLY_HAVEN_SORT_POPULAR = "popular"
+
 internal class PostsRepository @Inject constructor(
     private val postsApi: PostsApi,
     private val tagsStore: IStoreTagsRepository,
     private val postsSearchCache: IStoragePostsSearchRepository,
     private val dmsCache: IStorageDmsRepository,
     private val popularCache: IStoragePopularPostsRepository,
+    private val domainResolver: IDomainResolver,
 ) : IPostsRepository {
+
+    /** У OnlyHaven ссылки на файлы собираются клиентом, поэтому нужен хост. */
+    private fun fileBaseUrl(site: SelectedSite): String =
+        domainResolver.hostConfig(site).fileBaseUrl
 
     /** Поиск постов */
     override suspend fun getPosts(
@@ -55,7 +69,15 @@ internal class PostsRepository @Inject constructor(
         return try {
             val apiOffset = if (offset == 0) null else offset
 
-            val net = if (site == SelectedSite.P) {
+            val net = if (site == SelectedSite.O) {
+                /** Тегов у OnlyHaven нет — параметр игнорируется. */
+                postsApi.getOnlyHavenPosts(
+                    search = normalizedQuery,
+                    offset = apiOffset,
+                ).call { page ->
+                    page.posts.orEmpty().map { it.toOnlyHavenDomain(fileBaseUrl(site)) }
+                }
+            } else if (site == SelectedSite.P) {
                 postsApi.getPawchivePosts(
                     search = normalizedQuery,
                     offset = apiOffset,
@@ -107,12 +129,26 @@ internal class PostsRepository @Inject constructor(
         return try {
             val apiOffset = if (offset == 0) null else offset
 
-            val net = postsApi.getDms(
-                offset = apiOffset,
-                limit = limit,
-                query = normalizedQuery,
-            ).call { dto ->
-                dto.toDomain(requestedLimit = limit)
+            val net = if (site == SelectedSite.O) {
+                postsApi.getOnlyHavenDms(
+                    offset = apiOffset,
+                    limit = limit,
+                    search = normalizedQuery,
+                ).call { page ->
+                    DmsPageDomain(
+                        count = page.total ?: DmsPageDomain.UNKNOWN_COUNT,
+                        limit = limit,
+                        dms = page.dms.orEmpty().map { it.toDomain() },
+                    )
+                }
+            } else {
+                postsApi.getDms(
+                    offset = apiOffset,
+                    limit = limit,
+                    query = normalizedQuery,
+                ).call { dto ->
+                    dto.toDomain(requestedLimit = limit)
+                }
             }
 
             if (net.dms.isNotEmpty()) {
@@ -161,12 +197,52 @@ internal class PostsRepository @Inject constructor(
         return try {
             val apiOffset = if (offset == 0) null else offset
 
-            val net = postsApi.getPopularPosts(
-                date = date,
-                period = period.toDto(),
-                offset = apiOffset,
-            ).call { dto ->
-                dto.toDomain()
+            val net = if (site == SelectedSite.O) {
+                /** Популярное здесь — сортировка ленты по закладкам, без периодов. */
+                postsApi.getOnlyHavenPosts(
+                    offset = apiOffset,
+                    sort = ONLY_HAVEN_SORT_POPULAR,
+                ).call { page ->
+                    val fileBaseUrl = fileBaseUrl(site)
+                    PopularPosts(
+                        props = PopularProps(
+                            count = page.total ?: 0,
+                            earliestDateForPopular = null,
+                            today = LocalDate.now().toString(),
+                        ),
+                        /** Навигации по датам у источника нет — блок пустой. */
+                        info = PopularInfo(
+                            date = null,
+                            maxDate = null,
+                            minDate = null,
+                            navigationDates = null,
+                            rangeDesc = null,
+                            scale = null,
+                        ),
+                        posts = page.posts.orEmpty().map { it.toOnlyHavenDomain(fileBaseUrl) },
+                    )
+                }
+            } else if (site == SelectedSite.P) {
+                postsApi.getPawchivePopularHtml(
+                    date = date,
+                    period = period.toDto(),
+                    offset = apiOffset,
+                ).call { body ->
+                    parsePawchivePopularHtml(
+                        html = body.string(),
+                        period = period,
+                        requestedDate = date,
+                        offset = offset,
+                    )
+                }
+            } else {
+                postsApi.getPopularPosts(
+                    date = date,
+                    period = period.toDto(),
+                    offset = apiOffset,
+                ).call { dto ->
+                    dto.toDomain()
+                }
             }
 
             if (net.posts.isNotEmpty()) {

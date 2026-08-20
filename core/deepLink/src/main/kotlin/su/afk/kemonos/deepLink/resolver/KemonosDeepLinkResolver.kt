@@ -7,6 +7,7 @@ import su.afk.kemonos.creatorProfile.api.ICreatorProfileNavigator
 import su.afk.kemonos.deepLink.data.Domains
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.preferences.site.ISelectedSiteUseCase
+import su.afk.kemonos.preferences.site.setSiteAndAwait
 import javax.inject.Inject
 
 // todo продумать функциональность на каждый модуль
@@ -21,13 +22,23 @@ internal class KemonosDeepLinkResolver @Inject constructor(
         val hostOk = uri.host == Domains.KEMONO ||
                 uri.host == Domains.COOMER ||
                 uri.host == Domains.PAWCHIVE ||
-                uri.host == Domains.PAWCHIVE_LEGACY
+                uri.host == Domains.PAWCHIVE_LEGACY ||
+                uri.host == Domains.ONLYHAVEN
         if (!hostOk) return null
 
-        selectedSiteUseCase.setSite(siteByHost(uri.host))
+        val site = siteByHost(uri.host)
+        /**
+         * Именно await: навигаторы ниже перечитывают выбранный сайт, чтобы
+         * определить владельца сервиса. С асинхронной установкой они увидят
+         * прежний источник и уведут ссылку не туда.
+         */
+        selectedSiteUseCase.setSiteAndAwait(site)
 
         val s = uri.pathSegments
         if (s.isEmpty()) return null
+
+        /** У OnlyHaven ссылки другой формы: /creators/{service}/{id}[/post/{postId}] */
+        if (site == SelectedSite.O) return resolveOnlyHaven(s)
 
         // Discord:
         // 1) /discord/server/{serverId}
@@ -82,10 +93,31 @@ internal class KemonosDeepLinkResolver @Inject constructor(
         }
     }
 
+    private suspend fun resolveOnlyHaven(segments: List<String>): NavKey? {
+        if (segments.getOrNull(0) != "creators") return null
+
+        val service = segments.getOrNull(1)?.takeIf { it.isNotBlank() } ?: return null
+        val id = segments.getOrNull(2)?.takeIf { it.isNotBlank() } ?: return null
+
+        val postId = segments.getOrNull(4)?.takeIf { segments.getOrNull(3) == "post" && it.isNotBlank() }
+
+        return if (postId != null) {
+            creatorPostNavigator.getCreatorPostDest(
+                id = id,
+                service = service,
+                postId = postId,
+                showBarCreator = true,
+            )
+        } else {
+            creatorProfileNavigator.getCreatorProfileDest(service = service, id = id)
+        }
+    }
+
     private fun siteByHost(host: String?): SelectedSite =
         when (host) {
             Domains.COOMER -> SelectedSite.C
             Domains.PAWCHIVE, Domains.PAWCHIVE_LEGACY -> SelectedSite.P
+            Domains.ONLYHAVEN -> SelectedSite.O
             else -> SelectedSite.K
         }
 }

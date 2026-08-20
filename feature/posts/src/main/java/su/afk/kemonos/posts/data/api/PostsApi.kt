@@ -1,10 +1,13 @@
 package su.afk.kemonos.posts.data.api
 
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 import su.afk.kemonos.data.dto.PostUnifiedDto
+import su.afk.kemonos.data.dto.onlyhaven.OnlyHavenPostsPageDto
+import su.afk.kemonos.posts.data.dto.onlyhaven.OnlyHavenDmsPageDto
 import su.afk.kemonos.network.textInterceptor.HeaderText
 import su.afk.kemonos.posts.data.dto.PostsDto
 import su.afk.kemonos.posts.data.dto.dms.DmsPageDto
@@ -32,6 +35,28 @@ internal interface PostsApi {
         @Query("tag") tag: String? = null,
     ): Response<List<PostUnifiedDto>>
 
+    /**
+     * OnlyHaven: {total, posts[]}, пагинация o/n, тегов нет.
+     *
+     * [sort] = "popular" даёт раздел популярного — это сортировка ленты
+     * по числу закладок, периодов и дат у неё нет.
+     */
+    @GET("v1/posts")
+    suspend fun getOnlyHavenPosts(
+        @Query("o") offset: Int? = null,
+        @Query("n") limit: Int? = null,
+        @Query("q") search: String? = null,
+        @Query("sort") sort: String? = null,
+    ): Response<OnlyHavenPostsPageDto>
+
+    /** OnlyHaven: глобальная лента личных сообщений. */
+    @GET("v1/dms")
+    suspend fun getOnlyHavenDms(
+        @Query("o") offset: Int? = null,
+        @Query("n") limit: Int? = null,
+        @Query("q") search: String? = null,
+    ): Response<OnlyHavenDmsPageDto>
+
     @GET("v1/dms")
     @HeaderText
     suspend fun getDms(
@@ -47,6 +72,14 @@ internal interface PostsApi {
         @Query("period") period: PeriodDto = PeriodDto.RECENT,
         @Query("o") offset: Int? = null,
     ): Response<PopularPostsDto>
+
+    /** Pawchive не отдаёт популярное через JSON API — только HTML-страницей в корне сайта */
+    @GET("/posts/popular")
+    suspend fun getPawchivePopularHtml(
+        @Query("date") date: String? = null,
+        @Query("period") period: PeriodDto = PeriodDto.RECENT,
+        @Query("o") offset: Int? = null,
+    ): Response<ResponseBody>
 
     @GET("v1/posts/tags")
     @HeaderText

@@ -1,5 +1,6 @@
 package su.afk.kemonos.profile.presenter.login
 
+import su.afk.kemonos.domain.capabilities
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -30,6 +31,7 @@ import su.afk.kemonos.profile.presenter.login.util.loginPasswordErrorRes
 import su.afk.kemonos.profile.presenter.login.util.loginUsernameErrorRes
 import su.afk.kemonos.ui.R.drawable.coomer_logo
 import su.afk.kemonos.ui.R.drawable.kemono_logo
+import su.afk.kemonos.ui.R.drawable.onlyhaven_logo
 import su.afk.kemonos.ui.R.drawable.pawchive_logo
 import su.afk.kemonos.ui.presenter.baseScreen.BaseScreen
 import su.afk.kemonos.ui.presenter.baseScreen.CenterBackTopBar
@@ -47,7 +49,7 @@ internal fun LoginScreen(
     val activity = remember(context) { context.findActivity() }
 
     LaunchedEffect(activity, state.selectSite) {
-        if (activity != null && state.selectSite != SelectedSite.P) {
+        if (activity != null && state.selectSite.capabilities.auth) {
             onEvent(Event.RequestSavedCredentials)
         }
     }
@@ -128,6 +130,7 @@ private fun AuthLogo(selectSite: SelectedSite) {
         SelectedSite.C -> coomer_logo
         SelectedSite.K -> kemono_logo
         SelectedSite.P -> pawchive_logo
+        SelectedSite.O -> onlyhaven_logo
     }
     Image(
         painter = painterResource(id = logoRes),

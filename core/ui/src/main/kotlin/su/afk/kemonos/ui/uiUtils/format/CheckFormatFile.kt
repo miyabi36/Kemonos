@@ -1,5 +1,6 @@
 package su.afk.kemonos.ui.uiUtils.format
 
+import su.afk.kemonos.domain.MediaUrlScheme
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
@@ -83,8 +84,52 @@ fun findFirstVideoPath(post: PostDomain): String? {
         .firstOrNull { isVideoFile(it) }
 }
 
-/** Сборка URL под backend */
-fun buildFileUrl(baseUrl: String, path: String): String = "$baseUrl/data$path"
+/** Сборка URL файла по схеме источника. */
+fun buildFileUrl(baseUrl: String, path: String, scheme: MediaUrlScheme): String =
+    when (scheme) {
+        MediaUrlScheme.DATA_PREFIXED -> "$baseUrl/data$path"
+        MediaUrlScheme.DIRECT -> "$baseUrl$path"
+    }
+
+/** Аватар автора: у источников разные конвенции путей. */
+fun buildCreatorAvatarUrl(
+    imageBaseUrl: String,
+    service: String,
+    creatorId: String,
+    scheme: MediaUrlScheme,
+): String = when (scheme) {
+    MediaUrlScheme.DATA_PREFIXED -> "$imageBaseUrl/icons/$service/$creatorId"
+    MediaUrlScheme.DIRECT -> "$imageBaseUrl/creator/$service/$creatorId/avatar.webp"
+}
+
+/** Шапка профиля автора. */
+fun buildCreatorBannerUrl(
+    imageBaseUrl: String,
+    service: String,
+    creatorId: String,
+    scheme: MediaUrlScheme,
+): String = when (scheme) {
+    MediaUrlScheme.DATA_PREFIXED -> "$imageBaseUrl/banners/$service/$creatorId"
+    MediaUrlScheme.DIRECT -> "$imageBaseUrl/creator/$service/$creatorId/header.webp"
+}
+
+/**
+ * Сборка URL превью по схеме источника.
+ *
+ * [thumbnailPath] — готовый путь, если источник задаёт его явно (OnlyHaven).
+ * [segment] — сегмент kemono-схемы: обычно "thumbnail", но у превью поста это `preview.type`.
+ */
+fun buildThumbnailUrl(
+    imageBaseUrl: String,
+    path: String,
+    scheme: MediaUrlScheme,
+    thumbnailPath: String? = null,
+    segment: String = "thumbnail",
+): String = when {
+    thumbnailPath != null -> "$imageBaseUrl$thumbnailPath"
+    scheme == MediaUrlScheme.DATA_PREFIXED -> "$imageBaseUrl/$segment/data$path"
+    else -> "$imageBaseUrl$path"
+}
 
 fun buildVideoPreviewUrl(
     videoPath: String?,

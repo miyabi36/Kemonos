@@ -35,10 +35,10 @@
     <string name="popular_period_day">День</string>
     <string name="popular_period_week">Неделя</string>
     <string name="popular_period_month">Месяц</string>
-    <string name="popular_pawchive_unsupported">Популярное недоступно для Pawchive.</string>
-    <string name="dm_pawchive_unsupported">DM недоступны для Pawchive.</string>
+    <string name="dm_site_unsupported">DM недоступны для %1$s.</string>
 
     <!-- Описание диапазона популярных постов -->
     <string name="popular_range_single">Популярное за %1$s</string>
     <string name="popular_range_range">Популярное с %1$s по %2$s</string>
+    <string name="popular_site_unsupported">Популярное недоступно для %1$s.</string>
 </resources>

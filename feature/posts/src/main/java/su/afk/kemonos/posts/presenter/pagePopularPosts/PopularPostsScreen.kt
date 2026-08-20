@@ -1,27 +1,29 @@
 package su.afk.kemonos.posts.presenter.pagePopularPosts
 
+import su.afk.kemonos.domain.capabilities
+import androidx.compose.foundation.layout.fillMaxWidth
+import su.afk.kemonos.posts.R
+import su.afk.kemonos.domain.displayName
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.Flow
 import su.afk.kemonos.domain.SelectedSite
-import su.afk.kemonos.posts.R
 import su.afk.kemonos.posts.presenter.pagePopularPosts.PopularPostsState.Effect
 import su.afk.kemonos.posts.presenter.pagePopularPosts.PopularPostsState.Event
 import su.afk.kemonos.posts.presenter.pagePopularPosts.PopularPostsState.State
@@ -62,12 +64,15 @@ internal fun PopularPostsScreen(
         contentPadding = PaddingValues(horizontal = 8.dp),
         isScroll = false,
         topBar = {
-            PopularPeriodsPanel(
-                state = state,
-                onSlotClick = { period, slot ->
-                    onEvent(Event.PeriodSlotClick(period, slot))
-                }
-            )
+            /** У источника без периодов популярное — просто сортировка ленты. */
+            if (!state.popularUnsupported && site.capabilities.popularPeriods) {
+                PopularPeriodsPanel(
+                    state = state,
+                    onSlotClick = { period, slot ->
+                        onEvent(Event.PeriodSlotClick(period, slot))
+                    }
+                )
+            }
         },
         floatingActionButtonStart = {
             if (state.uiSettingModel.shouldShowSiteToggleFab()) {
@@ -81,11 +86,21 @@ internal fun PopularPostsScreen(
         isLoading = isPageLoading && posts.itemCount == 0,
     ) {
         if (state.popularUnsupported) {
-            PopularUnsupportedContent(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .weight(1f),
-            )
+                    .weight(1f)
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.popular_site_unsupported, site.displayName),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+            }
             return@BaseScreen
         }
 
@@ -109,23 +124,5 @@ internal fun PopularPostsScreen(
                 scrollStateKey = "popular:$site:${state.popularPeriod}:${state.popularDateForPopular}:${state.uiSettingModel.popularPostsViewMode}:${state.uiSettingModel.popularPostsGridSize}",
             )
         }
-    }
-}
-
-@Composable
-private fun PopularUnsupportedContent(
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.padding(16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = stringResource(R.string.popular_pawchive_unsupported),
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
     }
 }

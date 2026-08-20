@@ -14,6 +14,9 @@ import su.afk.kemonos.creatorProfile.data.dto.profileLinks.ProfileLinksDto
 import su.afk.kemonos.creatorProfile.data.dto.profileSimilar.SimilarCreatorDto
 import su.afk.kemonos.creatorProfile.data.dto.profileTags.TagDto
 import su.afk.kemonos.data.dto.PostUnifiedDto
+import su.afk.kemonos.data.dto.onlyhaven.OnlyHavenPostsPageDto
+import su.afk.kemonos.creatorProfile.data.dto.onlyhaven.OnlyHavenProfileDto
+import su.afk.kemonos.creatorProfile.data.dto.onlyhaven.OnlyHavenSimilarPageDto
 import su.afk.kemonos.network.textInterceptor.HeaderText
 
 internal interface CreatorProfileApi {
@@ -38,6 +41,30 @@ internal interface CreatorProfileApi {
         @Query("q") search: String? = null,
         @Query("tag") tag: String? = null
     ): Response<List<PostUnifiedDto>>
+
+    /** OnlyHaven: {total, posts[]}; creatorId в элементах не приходит. */
+    @GET("v1/{service}/user/{id}/posts")
+    suspend fun getOnlyHavenProfilePosts(
+        @Path("service") service: String,
+        @Path("id") id: String,
+        @Query("o") offset: Int? = null,
+        @Query("n") limit: Int? = null,
+        @Query("q") search: String? = null,
+    ): Response<OnlyHavenPostsPageDto>
+
+    /** OnlyHaven: профиль автора. */
+    @GET("v1/{service}/user/{id}/profile")
+    suspend fun getOnlyHavenProfile(
+        @Path("service") service: String,
+        @Path("id") id: String,
+    ): Response<OnlyHavenProfileDto>
+
+    /** OnlyHaven: похожие авторы (у kemono этот эндпоинт зовётся /recommended). */
+    @GET("v1/{service}/user/{id}/similar")
+    suspend fun getOnlyHavenSimilar(
+        @Path("service") service: String,
+        @Path("id") id: String,
+    ): Response<OnlyHavenSimilarPageDto>
 
     /** DMs */
     @HeaderText

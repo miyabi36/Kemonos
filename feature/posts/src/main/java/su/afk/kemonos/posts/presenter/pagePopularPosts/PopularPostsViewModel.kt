@@ -6,6 +6,9 @@ import androidx.paging.filter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import su.afk.kemonos.domain.capabilities
+import kotlinx.coroutines.flow.flowOf
+import androidx.paging.PagingData
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
 import su.afk.kemonos.error.error.IErrorHandlerUseCase
@@ -119,8 +122,6 @@ internal class PopularPostsViewModel @Inject constructor(
     }
 
     private fun submitCurrentRequest(forceRefresh: Boolean) {
-        if (currentState.popularUnsupported) return
-
         val refreshCounter = nextRefreshCounter(forceRefresh)
         val request = popularRequestFlow.value ?: PopularRequest(
             site = site.value,
@@ -153,21 +154,18 @@ internal class PopularPostsViewModel @Inject constructor(
         blacklistedKeys: Set<String>,
         forceRefresh: Boolean,
     ) {
-        if (site == SelectedSite.P) {
+        setState { copy(popularDateForPopular = date, popularPeriod = period) }
+
+        if (!site.capabilities.popularPosts) {
             setState {
                 copy(
-                    posts = emptyFlow(),
-                    popularPostsInfo = null,
-                    popularProps = null,
-                    popularDateForPopular = null,
-                    popularPeriod = Period.RECENT,
                     popularUnsupported = true,
+                    posts = flowOf(PagingData.empty()),
                 )
             }
             return
         }
-
-        setState { copy(popularDateForPopular = date, popularPeriod = period) }
+        setState { copy(popularUnsupported = false) }
 
         val flow = getPopularPostsUseCase(
             site = site,
@@ -198,12 +196,7 @@ internal class PopularPostsViewModel @Inject constructor(
             }
         }
 
-        setState {
-            copy(
-                posts = flow,
-                popularUnsupported = false,
-            )
-        }
+        setState { copy(posts = flow) }
     }
 
     private fun onPullRefresh() {

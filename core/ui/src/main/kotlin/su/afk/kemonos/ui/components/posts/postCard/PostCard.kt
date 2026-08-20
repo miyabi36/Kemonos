@@ -1,5 +1,6 @@
 package su.afk.kemonos.ui.components.posts.postCard
 
+import su.afk.kemonos.domain.capabilities
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
 import su.afk.kemonos.preferences.domainResolver.LocalDomainResolver
+import su.afk.kemonos.preferences.domainResolver.mediaUrlSchemeByService
 import su.afk.kemonos.preferences.ui.PostsSize
 import su.afk.kemonos.preferences.ui.PostsSize.Companion.toPaddingInCornerBadge
 import su.afk.kemonos.preferences.ui.UiSettingModel
@@ -44,9 +46,10 @@ fun PostCard(
 ) {
     val resolver = LocalDomainResolver.current
     val imgBaseUrl = remember(post.service) { resolver.imageBaseUrlByService(post.service) }
+    val mediaUrlScheme = remember(post.service) { resolver.mediaUrlSchemeByService(post.service) }
     val meta = rememberPostCardMeta(
         post = post,
-        allowVideoPreview = resolver.selectedSite() != SelectedSite.P,
+        allowVideoPreview = resolver.selectedSite().capabilities.videoPreview,
     )
     val interactionSource = remember { MutableInteractionSource() }
     val pressedScale = rememberKemonosPressedScale(interactionSource)
@@ -76,6 +79,7 @@ fun PostCard(
             PostPreview(
                 preview = meta.preview,
                 imgBaseUrl = imgBaseUrl,
+                mediaUrlScheme = mediaUrlScheme,
                 uiSettingModel = uiSettingModel,
                 title = post.title,
                 textPreview = post.substring,

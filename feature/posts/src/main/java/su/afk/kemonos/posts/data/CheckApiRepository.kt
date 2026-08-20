@@ -7,37 +7,28 @@ import su.afk.kemonos.posts.api.apiCheck.ApiCheckForAllSitesResult
 import su.afk.kemonos.posts.api.apiCheck.SingleSiteCheck
 import su.afk.kemonos.posts.data.api.PostsApi
 import su.afk.kemonos.posts.domain.repository.ICheckApiRepository
-import su.afk.kemonos.preferences.site.ISelectedSiteUseCase
-import su.afk.kemonos.preferences.site.withSite
 import javax.inject.Inject
 
 internal class CheckApiRepository @Inject constructor(
-    private val api: PostsApi,
-    private val selectedSite: ISelectedSiteUseCase,
+    private val apis: Map<SelectedSite, @JvmSuppressWildcards PostsApi>,
     private val errorHandler: IErrorHandlerUseCase,
 ) : ICheckApiRepository {
 
     override suspend fun getApiCheckForSites(sitesToCheck: Set<SelectedSite>): ApiCheckForAllSitesResult {
-        val kemono = if (SelectedSite.K in sitesToCheck) checkSite(SelectedSite.K)
-        else SingleSiteCheck(site = SelectedSite.K, success = true)
-
-        val coomer = if (SelectedSite.C in sitesToCheck) checkSite(SelectedSite.C)
-        else SingleSiteCheck(site = SelectedSite.C, success = true)
-
-        val pawchive = if (SelectedSite.P in sitesToCheck) checkSite(SelectedSite.P)
-        else SingleSiteCheck(site = SelectedSite.P, success = true)
-
-        return ApiCheckForAllSitesResult(kemono = kemono, coomer = coomer, pawchive = pawchive)
+        val checks = SelectedSite.entries.associateWith { site ->
+            if (site in sitesToCheck) checkSite(site)
+            else SingleSiteCheck(site = site, success = true)
+        }
+        return ApiCheckForAllSitesResult(checks)
     }
 
     private suspend fun checkSite(site: SelectedSite): SingleSiteCheck {
         return try {
-            val response = selectedSite.withSite(site) {
-                if (site == SelectedSite.P) {
-                    api.getPawchivePosts()
-                } else {
-                    api.getPosts()
-                }
+            val api = apis.getValue(site)
+            val response = when (site) {
+                SelectedSite.O -> api.getOnlyHavenPosts()
+                SelectedSite.P -> api.getPawchivePosts()
+                else -> api.getPosts()
             }
 
             if (response.isSuccessful) {

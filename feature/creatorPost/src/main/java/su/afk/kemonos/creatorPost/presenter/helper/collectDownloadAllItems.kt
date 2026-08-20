@@ -1,11 +1,13 @@
 package su.afk.kemonos.creatorPost.presenter.helper
 
+import su.afk.kemonos.ui.uiUtils.format.buildFileUrl
+import su.afk.kemonos.domain.MediaUrlScheme
 import su.afk.kemonos.creatorPost.api.domain.model.PostContentDomain
 import su.afk.kemonos.domain.models.AttachmentDomain
 import su.afk.kemonos.domain.models.PreviewDomain
 import su.afk.kemonos.domain.models.VideoDomain
 import su.afk.kemonos.ui.uiUtils.format.isAudioFile
-import su.afk.kemonos.utils.url.buildContentUrlToDataSite
+import su.afk.kemonos.utils.url.buildContentUrl
 import java.net.URLEncoder
 import java.util.*
 
@@ -14,25 +16,28 @@ internal data class PostDownloadItem(
     val fileName: String?,
 )
 
-internal fun PostContentDomain.collectDownloadAllItems(fallbackBaseUrl: String): List<PostDownloadItem> = buildList {
+internal fun PostContentDomain.collectDownloadAllItems(
+    fallbackBaseUrl: String,
+    mediaUrlScheme: MediaUrlScheme,
+): List<PostDownloadItem> = buildList {
     previews.asSequence()
         .distinctBy { it.previewKey() }
-        .mapNotNull { it.toThumbnailDownloadItemOrNull() }
+        .mapNotNull { it.toThumbnailDownloadItemOrNull(mediaUrlScheme) }
         .forEach(::add)
 
     videos.asSequence()
         .distinctBy { video -> "video:${video.server}:${video.path}" }
-        .map(VideoDomain::toDownloadItem)
+        .map { it.toDownloadItem(mediaUrlScheme) }
         .forEach(::add)
 
     attachments.asSequence()
         .filter { isAudioFile(it.path) }
         .distinctBy { "${it.server.orEmpty()}|${it.path}" }
-        .map { it.toAttachmentDownloadItem(fallbackBaseUrl) }
+        .map { it.toAttachmentDownloadItem(fallbackBaseUrl, mediaUrlScheme) }
         .forEach(::add)
 
     attachments.asSequence()
-        .map { it.toAttachmentDownloadItem(fallbackBaseUrl) }
+        .map { it.toAttachmentDownloadItem(fallbackBaseUrl, mediaUrlScheme) }
         .forEach(::add)
 }
     .distinctBy(PostDownloadItem::dedupKey)
@@ -44,7 +49,7 @@ private fun PreviewDomain.previewKey(): String = when (type) {
     else -> "${type}:${path}:${url}"
 }
 
-private fun PreviewDomain.toThumbnailDownloadItemOrNull(): PostDownloadItem? {
+private fun PreviewDomain.toThumbnailDownloadItemOrNull(scheme: MediaUrlScheme): PostDownloadItem? {
     if (type != "thumbnail") return null
 
     val server = server ?: return null
@@ -53,18 +58,21 @@ private fun PreviewDomain.toThumbnailDownloadItemOrNull(): PostDownloadItem? {
     val encodedName = URLEncoder.encode(name, Charsets.UTF_8.name())
 
     return PostDownloadItem(
-        url = "$server/data$path?f=$encodedName",
+        url = buildFileUrl(server, path, scheme) + "?f=" + encodedName,
         fileName = name
     )
 }
 
-private fun VideoDomain.toDownloadItem(): PostDownloadItem = PostDownloadItem(
-    url = "${server}/data${path}",
+private fun VideoDomain.toDownloadItem(scheme: MediaUrlScheme): PostDownloadItem = PostDownloadItem(
+    url = buildFileUrl(server.orEmpty(), path, scheme),
     fileName = name
 )
 
-private fun AttachmentDomain.toAttachmentDownloadItem(fallbackBaseUrl: String): PostDownloadItem = PostDownloadItem(
-    url = buildContentUrlToDataSite(fallbackBaseUrl),
+private fun AttachmentDomain.toAttachmentDownloadItem(
+    fallbackBaseUrl: String,
+    mediaUrlScheme: MediaUrlScheme,
+): PostDownloadItem = PostDownloadItem(
+    url = buildContentUrl(mediaUrlScheme, fallbackBaseUrl),
     fileName = name
 )
 
