@@ -155,6 +155,7 @@ private class FakeDownloadUtil(
         creatorName: String?,
         postId: String?,
         postTitle: String?,
+        subDir: String?,
     ): Long {
         enqueued += EnqueuedDownload(
             url = url,

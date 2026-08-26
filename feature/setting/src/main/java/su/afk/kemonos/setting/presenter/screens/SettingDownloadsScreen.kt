@@ -15,6 +15,7 @@ import su.afk.kemonos.setting.presenter.SettingState.State
 import su.afk.kemonos.setting.presenter.view.SwitchRow
 import su.afk.kemonos.setting.presenter.view.common.SectionSpacer
 import su.afk.kemonos.setting.presenter.view.common.SettingsSectionTitle
+import su.afk.kemonos.setting.presenter.view.download.DownloadFileNameModeRow
 import su.afk.kemonos.setting.presenter.view.download.DownloadFolderModeRow
 import su.afk.kemonos.ui.presenter.baseScreen.TopBarScroll
 
@@ -48,6 +49,23 @@ internal fun SettingDownloadsScreen(
             value = state.uiSettingModel.downloadFolderMode,
             addServiceName = state.uiSettingModel.addServiceName,
             onChange = { onEvent(Event.ChangeViewSetting.EditDownloadFolderMode(it)) }
+        )
+
+        SectionSpacer()
+
+        DownloadFileNameModeRow(
+            title = stringResource(R.string.settings_download_file_name_mode_title),
+            value = state.uiSettingModel.downloadFileNameMode,
+            onChange = { onEvent(Event.ChangeViewSetting.EditDownloadFileNameMode(it)) }
+        )
+
+        Spacer(Modifier.height(6.dp))
+
+        SwitchRow(
+            title = stringResource(R.string.settings_download_post_cover_title),
+            subtitle = stringResource(R.string.settings_download_post_cover_subtitle),
+            checked = state.uiSettingModel.downloadPostCover,
+            onCheckedChange = { onEvent(Event.ChangeViewSetting.DownloadPostCover(it)) }
         )
     }
 }
