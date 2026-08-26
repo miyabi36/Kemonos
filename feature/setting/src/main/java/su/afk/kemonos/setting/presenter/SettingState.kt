@@ -6,6 +6,7 @@ import su.afk.kemonos.preferences.ui.AppThemeMode
 import su.afk.kemonos.preferences.ui.CreatorProfileTabKey
 import su.afk.kemonos.preferences.ui.CreatorViewMode
 import su.afk.kemonos.preferences.ui.DateFormatMode
+import su.afk.kemonos.preferences.ui.DownloadFileNameMode
 import su.afk.kemonos.preferences.ui.DownloadFolderMode
 import su.afk.kemonos.preferences.ui.PostsSize
 import su.afk.kemonos.preferences.ui.PostSwipeAxis
@@ -139,6 +140,8 @@ class SettingState {
             data class HideAttachmentsBlockInPost(val value: Boolean) : ChangeViewSetting
 
             data class EditDownloadFolderMode(val value: DownloadFolderMode) : ChangeViewSetting
+            data class EditDownloadFileNameMode(val value: DownloadFileNameMode) : ChangeViewSetting
+            data class DownloadPostCover(val value: Boolean) : ChangeViewSetting
             data class AddServiceName(val value: Boolean) : ChangeViewSetting
             data class UseExternalMetaData(val value: Boolean) : ChangeViewSetting
 

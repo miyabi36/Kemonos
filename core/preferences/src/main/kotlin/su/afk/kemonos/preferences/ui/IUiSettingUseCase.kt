@@ -114,6 +114,12 @@ interface IUiSettingUseCase {
     /** Добавлять префикс сервиса при скачивании */
     suspend fun setAddServiceName(value: Boolean)
 
+    /** Как называть скачиваемые файлы поста */
+    suspend fun setDownloadFileNameMode(value: DownloadFileNameMode)
+
+    /** Скачивать ли обложку поста вместе с остальными файлами */
+    suspend fun setDownloadPostCover(value: Boolean)
+
     /** Использовать внешнее хранилище метадатнных */
     suspend fun setUseExternalMetaData(value: Boolean)
 

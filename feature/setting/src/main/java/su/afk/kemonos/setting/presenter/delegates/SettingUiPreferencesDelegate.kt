@@ -168,6 +168,14 @@ class SettingUiPreferencesDelegate @Inject constructor(
             is SettingState.Event.ChangeViewSetting.EditDownloadFolderMode ->
                 scope.launch { uiSetting.setDownloadFolderMode(event.value) }
 
+            /** Как называть скачиваемые файлы поста */
+            is SettingState.Event.ChangeViewSetting.EditDownloadFileNameMode ->
+                scope.launch { uiSetting.setDownloadFileNameMode(event.value) }
+
+            /** Скачивать ли обложку поста */
+            is SettingState.Event.ChangeViewSetting.DownloadPostCover ->
+                scope.launch { uiSetting.setDownloadPostCover(event.value) }
+
             /** Добавлять префикс сервиса при скачивании */
             is SettingState.Event.ChangeViewSetting.AddServiceName ->
                 scope.launch { uiSetting.setAddServiceName(event.value) }

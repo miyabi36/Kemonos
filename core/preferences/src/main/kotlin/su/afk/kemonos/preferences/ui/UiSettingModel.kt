@@ -111,6 +111,23 @@ enum class DownloadFolderMode {
     POST_TITLE_ID,           // <postTitle>_<postId>
 }
 
+/**
+ * Как называть файлы, которые скачиваются из поста.
+ *
+ * Pawchive отдаёт вложения под именем-хешем, поэтому в папке оказывается набор
+ * случайных строк вместо страниц по порядку.
+ */
+enum class DownloadFileNameMode {
+    /** Имя из источника как есть. */
+    ORIGINAL,
+
+    /** Всегда порядковый номер: 1.png, 2.webp, ... */
+    NUMBERED,
+
+    /** Номер только там, где источник вместо имени отдал хеш. */
+    NUMBERED_FOR_HASH_NAMES,
+}
+
 enum class CreatorProfileTabKey {
     POSTS,
     ANNOUNCEMENTS,
@@ -240,6 +257,12 @@ data class UiSettingModel(
      * kemonos/<service> */
     val addServiceName: Boolean = DEFAULT_ADD_SERVICE_NAME,
 
+    /** Как называть скачиваемые файлы поста */
+    val downloadFileNameMode: DownloadFileNameMode = DEFAULT_DOWNLOAD_FILE_NAME_MODE,
+
+    /** Скачивать обложку поста (post.file) вместе с остальными файлами */
+    val downloadPostCover: Boolean = DEFAULT_DOWNLOAD_POST_COVER,
+
     /** Использовать внешнее хранилище метадатнных */
     val useExternalMetaData: Boolean = USE_EXTERNAL_METADATA,
 
@@ -314,6 +337,8 @@ data class UiSettingModel(
 
         val DEFAULT_DOWNLOAD_FOLDER_MODE = DownloadFolderMode.CREATOR_POST_TITLE_ID
         const val DEFAULT_ADD_SERVICE_NAME = false
+        val DEFAULT_DOWNLOAD_FILE_NAME_MODE = DownloadFileNameMode.NUMBERED_FOR_HASH_NAMES
+        const val DEFAULT_DOWNLOAD_POST_COVER = true
         const val USE_EXTERNAL_METADATA = true
         const val DEFAULT_VIDEO_PREVIEW_SERVER_URL = "https://kemonos.win"
         val DEFAULT_VIDEO_PREVIEW_ASPECT_RATIO = VideoPreviewAspectRatio.RATIO_1_1
