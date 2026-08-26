@@ -21,9 +21,9 @@ import su.afk.kemonos.creatorPost.presenter.delegates.LikeDelegate
 import su.afk.kemonos.creatorPost.presenter.delegates.MediaMetaDelegateNew
 import su.afk.kemonos.creatorPost.presenter.delegates.NavigateDelegates
 import su.afk.kemonos.creatorPost.presenter.delegates.PostLoadDelegate
-import su.afk.kemonos.creatorPost.presenter.helper.PostDownloadItem
-import su.afk.kemonos.creatorPost.presenter.helper.collectDownloadAllItems
-import su.afk.kemonos.creatorPost.presenter.helper.downloadUrlKey
+import su.afk.kemonos.creatorPost.domain.download.PostDownloadItem
+import su.afk.kemonos.creatorPost.domain.download.collectDownloadAllItems
+import su.afk.kemonos.creatorPost.domain.download.downloadUrlKey
 import su.afk.kemonos.creatorPost.presenter.model.LoadRequest
 import su.afk.kemonos.domain.models.PreviewDomain
 import su.afk.kemonos.download.api.IDownloadUtil

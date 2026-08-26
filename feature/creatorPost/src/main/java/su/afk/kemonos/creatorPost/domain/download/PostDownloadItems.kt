@@ -1,4 +1,4 @@
-package su.afk.kemonos.creatorPost.presenter.helper
+package su.afk.kemonos.creatorPost.domain.download
 
 import su.afk.kemonos.ui.uiUtils.format.buildFileUrl
 import su.afk.kemonos.domain.MediaUrlScheme

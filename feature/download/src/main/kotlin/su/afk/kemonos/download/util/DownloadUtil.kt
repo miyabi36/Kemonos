@@ -34,6 +34,7 @@ internal class DownloadUtil @Inject constructor(
         creatorName: String?,
         postId: String?,
         postTitle: String?,
+        subDir: String?,
     ): Long {
         val settings = uiSetting.prefs.first()
 
@@ -51,18 +52,26 @@ internal class DownloadUtil @Inject constructor(
             .sanitizeFileName()
             .ifBlank { "download" }
 
-        val subDir = buildSubDir(
-            mode = settings.downloadFolderMode,
-            addServiceName = settings.addServiceName,
-            service = service,
-            creatorName = creatorName,
-            postId = postId,
-            postTitle = postTitle,
-        )
+        val destinationDir = subDir
+            ?.let { explicit ->
+                buildExplicitSubDir(
+                    addServiceName = settings.addServiceName,
+                    service = service,
+                    subDir = explicit,
+                )
+            }
+            ?: buildSubDir(
+                mode = settings.downloadFolderMode,
+                addServiceName = settings.addServiceName,
+                service = service,
+                creatorName = creatorName,
+                postId = postId,
+                postTitle = postTitle,
+            )
 
         request.setDestinationInExternalPublicDir(
             Environment.DIRECTORY_DOWNLOADS,
-            "$subDir/$safeName"
+            "$destinationDir/$safeName"
         )
 
         val id = downloadManager.enqueue(request)
@@ -77,12 +86,40 @@ internal class DownloadUtil @Inject constructor(
                 postId = postId,
                 postTitle = postTitle,
                 createdAtMs = System.currentTimeMillis(),
+                subDir = subDir,
             )
         )
 
         return id
     }
 }
+
+/**
+ * Папка, заданная вызывающим: всё, что скачано одной пачкой, лежит вместе.
+ *
+ * Префикс сервиса оставляем — он относится к раскладке приложения, а не к посту.
+ */
+private fun buildExplicitSubDir(
+    addServiceName: Boolean,
+    service: String?,
+    subDir: String,
+): String {
+    val core = subDir.split('/')
+        .map { it.sanitizePathPart(MAX_TITLE_DIR_LEN * 2) }
+        .filter { it.isNotBlank() }
+        .joinToString("/")
+        .ifBlank { "download" }
+
+    return "${appDirPrefix(addServiceName, service)}/$core"
+}
+
+private fun appDirPrefix(addServiceName: Boolean, service: String?): String =
+    if (addServiceName) {
+        val s = service.orEmpty().sanitizePathPart(MAX_SERVICE_LEN).ifBlank { "service" }
+        "$APP_DOWNLOAD_DIR/$s"
+    } else {
+        APP_DOWNLOAD_DIR
+    }
 
 private fun buildSubDir(
     mode: DownloadFolderMode,
@@ -119,14 +156,7 @@ private fun buildSubDir(
             "${titleWithSuffix}_$pid"
     }
 
-    val prefix = if (addServiceName) {
-        val s = service.orEmpty().sanitizePathPart(MAX_SERVICE_LEN).ifBlank { "service" }
-        "$APP_DOWNLOAD_DIR/$s"
-    } else {
-        APP_DOWNLOAD_DIR
-    }
-
-    return "$prefix/$core"
+    return "${appDirPrefix(addServiceName, service)}/$core"
 }
 
 private fun String.stableSuffix(len: Int): String {
