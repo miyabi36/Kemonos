@@ -26,6 +26,14 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
+
+            /**
+             * Its own package, so a debug build installs next to a release
+             * install instead of being refused for having a different
+             * signature. Debug builds are signed with whatever debug keystore
+             * the build machine generated, which never matches a release.
+             */
+            applicationIdSuffix = ".debug"
         }
 
         release {
