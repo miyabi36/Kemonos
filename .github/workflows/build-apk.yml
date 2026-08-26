@@ -23,6 +23,11 @@ jobs:
     name: Build ${{ inputs.build_type || 'debug' }} APK
     runs-on: ubuntu-latest
 
+    # A step's `if` cannot read the secrets context, so the presence of a
+    # keystore is resolved once here, where secrets are allowed.
+    env:
+      HAS_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,7 +68,7 @@ jobs:
       # is only good for inspection.
       - name: Sign release APK
         id: sign
-        if: ${{ (inputs.build_type == 'release') && (secrets.KEYSTORE_BASE64 != '') }}
+        if: ${{ (inputs.build_type == 'release') && (env.HAS_KEYSTORE == 'true') }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
