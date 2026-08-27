@@ -47,4 +47,7 @@
     <string name="downloads_action_delete">Удалить</string>
     <string name="downloads_action_delete_completed">Удалить все завершенные загрузки</string>
     <string name="downloads_actions">Действия загрузок</string>
+    <string name="downloads_notification_channel">Прогресс загрузок</string>
+    <string name="downloads_notification_title">Загрузка</string>
+    <string name="downloads_notification_progress">Готово %1$d из %2$d</string>
 </resources>

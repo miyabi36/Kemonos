@@ -30,5 +30,17 @@ data class BatchDownloadResult(
 )
 
 interface IPostsBatchDownloader {
+    /**
+     * Ставит пачку в очередь и ждёт, пока все посты будут разобраны.
+     */
     suspend fun enqueue(request: BatchDownloadRequest): BatchDownloadResult
+
+    /**
+     * То же самое, но не привязано к вызывающему экрану.
+     *
+     * Разбор пачки — это сетевые запросы за каждым постом, и на полусотне работ
+     * они идут минутами. Привязанные к экрану, они обрывались бы на середине,
+     * стоит уйти с профиля автора.
+     */
+    fun start(request: BatchDownloadRequest)
 }

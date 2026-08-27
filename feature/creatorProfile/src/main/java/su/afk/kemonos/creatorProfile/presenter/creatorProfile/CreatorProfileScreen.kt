@@ -62,7 +62,6 @@ internal fun CreatorScreen(
     val authorBlacklistRemoved = stringResource(R.string.author_blacklist_removed)
     val authorBlacklistAlreadyExists = stringResource(R.string.author_blacklist_already_exists)
     val batchDownloadStarted = stringResource(R.string.batch_download_started)
-    val batchDownloadStartedWithErrors = stringResource(R.string.batch_download_started_with_errors)
     val posts = if (state.selectedTab == ProfileTab.POSTS) {
         state.profilePosts.collectAsLazyPagingItems()
     } else {
@@ -87,18 +86,8 @@ internal fun CreatorScreen(
                 CreatorProfileState.Effect.RemovedFromBlacklist -> context.toast(authorBlacklistRemoved)
                 CreatorProfileState.Effect.AlreadyInBlacklist -> context.toast(authorBlacklistAlreadyExists)
 
-                is CreatorProfileState.Effect.BatchDownloadStarted -> {
-                    val message = if (effect.failedPosts > 0) {
-                        batchDownloadStartedWithErrors.format(
-                            effect.files,
-                            effect.posts,
-                            effect.failedPosts,
-                        )
-                    } else {
-                        batchDownloadStarted.format(effect.files, effect.posts)
-                    }
-                    context.toast(message)
-                }
+                is CreatorProfileState.Effect.BatchDownloadStarted ->
+                    context.toast(batchDownloadStarted.format(effect.works))
             }
         }
     }

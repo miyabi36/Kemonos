@@ -142,6 +142,9 @@ class SettingState {
             data class EditDownloadFolderMode(val value: DownloadFolderMode) : ChangeViewSetting
             data class EditDownloadFileNameMode(val value: DownloadFileNameMode) : ChangeViewSetting
             data class DownloadPostCover(val value: Boolean) : ChangeViewSetting
+            data class DownloadConvertToWebp(val value: Boolean) : ChangeViewSetting
+            data class DownloadWebpQuality(val value: Int) : ChangeViewSetting
+            data class DownloadSingleNotification(val value: Boolean) : ChangeViewSetting
             data class AddServiceName(val value: Boolean) : ChangeViewSetting
             data class UseExternalMetaData(val value: Boolean) : ChangeViewSetting
 

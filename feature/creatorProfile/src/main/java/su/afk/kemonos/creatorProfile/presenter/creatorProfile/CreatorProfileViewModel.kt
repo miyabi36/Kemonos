@@ -187,35 +187,23 @@ internal class CreatorProfileViewModel @AssistedInject constructor(
             includeCovers = currentState.batchDownloadIncludeCovers,
         )
 
-        setState { copy(batchDownloadInProgress = true) }
+        /**
+         * Пачка уходит в фоновую очередь: разбор полусотни постов идёт минутами,
+         * и держать ради него экран открытым не нужно.
+         */
+        postsBatchDownloader.start(request)
 
-        viewModelScope.launch {
-            val result = runCatching { postsBatchDownloader.enqueue(request) }
-
-            setState {
-                copy(
-                    batchDownloadInProgress = false,
-                    batchDownloadDialogVisible = false,
-                    selectionMode = false,
-                    selectedPosts = emptyList(),
-                    batchDownloadFolder = "",
-                )
-            }
-
-            result
-                .onSuccess { batch ->
-                    setEffect(
-                        Effect.BatchDownloadStarted(
-                            files = batch.enqueuedFiles,
-                            posts = batch.loadedPosts,
-                            failedPosts = batch.failedPosts,
-                        )
-                    )
-                }
-                .onFailure { error ->
-                    setEffect(Effect.ShowToast(errorHandler.parse(error, navigate = false).message))
-                }
+        setState {
+            copy(
+                batchDownloadInProgress = false,
+                batchDownloadDialogVisible = false,
+                selectionMode = false,
+                selectedPosts = emptyList(),
+                batchDownloadFolder = "",
+            )
         }
+
+        setEffect(Effect.BatchDownloadStarted(works = request.posts.size))
     }
 
     @AssistedFactory

@@ -142,11 +142,7 @@ internal class CreatorProfileState {
         data object AddedToBlacklist : Effect
         data object AlreadyInBlacklist : Effect
         data object RemovedFromBlacklist : Effect
-        data class BatchDownloadStarted(
-            val files: Int,
-            val posts: Int,
-            val failedPosts: Int,
-        ) : Effect
+        data class BatchDownloadStarted(val works: Int) : Effect
     }
 }
 
