@@ -67,6 +67,15 @@ internal fun SettingDownloadsScreen(
             checked = state.uiSettingModel.downloadPostCover,
             onCheckedChange = { onEvent(Event.ChangeViewSetting.DownloadPostCover(it)) }
         )
+
+        Spacer(Modifier.height(6.dp))
+
+        SwitchRow(
+            title = stringResource(R.string.settings_download_webp_title),
+            subtitle = stringResource(R.string.settings_download_webp_subtitle),
+            checked = state.uiSettingModel.downloadConvertToWebp,
+            onCheckedChange = { onEvent(Event.ChangeViewSetting.DownloadConvertToWebp(it)) }
+        )
     }
 }
 

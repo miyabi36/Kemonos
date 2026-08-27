@@ -120,6 +120,9 @@ interface IUiSettingUseCase {
     /** Скачивать ли обложку поста вместе с остальными файлами */
     suspend fun setDownloadPostCover(value: Boolean)
 
+    /** Пережимать ли скачанные картинки в webp */
+    suspend fun setDownloadConvertToWebp(value: Boolean)
+
     /** Использовать внешнее хранилище метадатнных */
     suspend fun setUseExternalMetaData(value: Boolean)
 

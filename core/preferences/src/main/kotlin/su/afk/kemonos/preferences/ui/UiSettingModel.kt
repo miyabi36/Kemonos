@@ -263,6 +263,9 @@ data class UiSettingModel(
     /** Скачивать обложку поста (post.file) вместе с остальными файлами */
     val downloadPostCover: Boolean = DEFAULT_DOWNLOAD_POST_COVER,
 
+    /** Пережимать скачанные png/jpeg в webp, чтобы занимали меньше места */
+    val downloadConvertToWebp: Boolean = DEFAULT_DOWNLOAD_CONVERT_TO_WEBP,
+
     /** Использовать внешнее хранилище метадатнных */
     val useExternalMetaData: Boolean = USE_EXTERNAL_METADATA,
 
@@ -339,6 +342,10 @@ data class UiSettingModel(
         const val DEFAULT_ADD_SERVICE_NAME = false
         val DEFAULT_DOWNLOAD_FILE_NAME_MODE = DownloadFileNameMode.NUMBERED_FOR_HASH_NAMES
         const val DEFAULT_DOWNLOAD_POST_COVER = true
+        const val DEFAULT_DOWNLOAD_CONVERT_TO_WEBP = false
+
+        /** Визуально почти без потерь, но заметно меньше исходника. */
+        const val DOWNLOAD_WEBP_QUALITY = 90
         const val USE_EXTERNAL_METADATA = true
         const val DEFAULT_VIDEO_PREVIEW_SERVER_URL = "https://kemonos.win"
         val DEFAULT_VIDEO_PREVIEW_ASPECT_RATIO = VideoPreviewAspectRatio.RATIO_1_1

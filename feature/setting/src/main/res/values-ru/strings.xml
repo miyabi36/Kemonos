@@ -247,6 +247,9 @@
     <string name="settings_download_file_name_numbered_hash_example">1.png, artwork.psd, 2.webp</string>
 
     <string name="settings_download_post_cover_title">Скачивать обложку поста</string>
+    <string name="settings_download_webp_title">Пережимать загрузки в WebP</string>
+    <string name="settings_download_webp_subtitle">Перекодирует скачанные png и jpeg с качеством 90. Уже сжатый webp и анимированные gif не трогает, а исходник удаляет только после появления нового файла.</string>
+
     <string name="settings_download_post_cover_subtitle">Обложка — главный файл поста; если выключено, нумерация начнётся со следующего</string>
 
     <string name="settings_network_video_preview_title">Сервер превью видео</string>

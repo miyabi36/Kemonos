@@ -241,6 +241,9 @@
     <string name="settings_download_file_name_numbered_hash_example">1.png, artwork.psd, 2.webp</string>
 
     <string name="settings_download_post_cover_title">Download the post cover</string>
+    <string name="settings_download_webp_title">Recompress downloads to WebP</string>
+    <string name="settings_download_webp_subtitle">Re-encodes finished PNG and JPEG downloads at quality 90. Files already in WebP and animated GIFs are left alone, and the original is only removed once the new file is in place.</string>
+
     <string name="settings_download_post_cover_subtitle">The cover is the post main file; numbering starts from the next one when it is off</string>
 
     <string name="settings_network_video_preview_title">Video preview server</string>

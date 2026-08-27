@@ -25,6 +25,7 @@ import su.afk.kemonos.preferences.ui.UiSettingKey.CROP_POST_PREVIEW_VIDEO
 import su.afk.kemonos.preferences.ui.UiSettingKey.CROP_VIDEO_PREVIEW
 import su.afk.kemonos.preferences.ui.UiSettingKey.DATE_FORMAT_MODE
 import su.afk.kemonos.preferences.ui.UiSettingKey.DISCORD_COMMUNITY_REVERSE_ORDER_DEFAULT
+import su.afk.kemonos.preferences.ui.UiSettingKey.DOWNLOAD_CONVERT_TO_WEBP
 import su.afk.kemonos.preferences.ui.UiSettingKey.DOWNLOAD_FILE_NAME_MODE
 import su.afk.kemonos.preferences.ui.UiSettingKey.DOWNLOAD_FOLDER_MODE
 import su.afk.kemonos.preferences.ui.UiSettingKey.DOWNLOAD_POST_COVER
@@ -142,6 +143,8 @@ internal class UiSettingUseCase @Inject constructor(
                 UiSettingModel.DEFAULT_DOWNLOAD_FILE_NAME_MODE
             ),
             downloadPostCover = p[DOWNLOAD_POST_COVER] ?: UiSettingModel.DEFAULT_DOWNLOAD_POST_COVER,
+            downloadConvertToWebp = p[DOWNLOAD_CONVERT_TO_WEBP]
+                ?: UiSettingModel.DEFAULT_DOWNLOAD_CONVERT_TO_WEBP,
             useExternalMetaData = p[USE_EXTERNAL_METADATA] ?: UiSettingModel.USE_EXTERNAL_METADATA,
             videoPreviewServerUrl = p[VIDEO_PREVIEW_SERVER_URL] ?: UiSettingModel.DEFAULT_VIDEO_PREVIEW_SERVER_URL,
             videoPreviewAspectRatio = p.readEnum(
@@ -370,6 +373,11 @@ internal class UiSettingUseCase @Inject constructor(
         dataStore.edit { it[DOWNLOAD_POST_COVER] = value }
     }
 
+    /** Пережимать ли скачанные картинки в webp */
+    override suspend fun setDownloadConvertToWebp(value: Boolean) {
+        dataStore.edit { it[DOWNLOAD_CONVERT_TO_WEBP] = value }
+    }
+
     /** Использовать внешнее хранилище метадатнных */
     override suspend fun setUseExternalMetaData(value: Boolean) {
         dataStore.edit { it[USE_EXTERNAL_METADATA] = value }
@@ -454,6 +462,7 @@ object UiSettingKey {
     val ADD_SERVICE_NAME = booleanPreferencesKey("ADD_SERVICE_NAME")
     val DOWNLOAD_FILE_NAME_MODE = stringPreferencesKey("DOWNLOAD_FILE_NAME_MODE")
     val DOWNLOAD_POST_COVER = booleanPreferencesKey("DOWNLOAD_POST_COVER")
+    val DOWNLOAD_CONVERT_TO_WEBP = booleanPreferencesKey("DOWNLOAD_CONVERT_TO_WEBP")
     val USE_EXTERNAL_METADATA = booleanPreferencesKey("USE_EXTERNAL_METADATA")
     val VIDEO_PREVIEW_SERVER_URL = stringPreferencesKey("VIDEO_PREVIEW_SERVER_URL")
     val VIDEO_PREVIEW_ASPECT_RATIO = stringPreferencesKey("VIDEO_PREVIEW_ASPECT_RATIO")

@@ -176,6 +176,10 @@ class SettingUiPreferencesDelegate @Inject constructor(
             is SettingState.Event.ChangeViewSetting.DownloadPostCover ->
                 scope.launch { uiSetting.setDownloadPostCover(event.value) }
 
+            /** Пережимать ли скачанные картинки в webp */
+            is SettingState.Event.ChangeViewSetting.DownloadConvertToWebp ->
+                scope.launch { uiSetting.setDownloadConvertToWebp(event.value) }
+
             /** Добавлять префикс сервиса при скачивании */
             is SettingState.Event.ChangeViewSetting.AddServiceName ->
                 scope.launch { uiSetting.setAddServiceName(event.value) }

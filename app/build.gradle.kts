@@ -75,8 +75,6 @@ androidComponents {
 }
 
 dependencies {
-    debugImplementation(libs.leakcanary.android)
-
     implementation(libs.bundles.hilt)
     ksp(libs.dagger.hilt.compiler)
 
