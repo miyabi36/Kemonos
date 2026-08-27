@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Нужно, чтобы прятать штатные уведомления DownloadManager в пользу своего. -->
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+
     <application>
         <!--
             DownloadManager адресует эту рассылку нашему пакету, поэтому приёмник

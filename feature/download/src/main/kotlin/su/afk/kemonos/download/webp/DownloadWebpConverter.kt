@@ -9,7 +9,6 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
-import su.afk.kemonos.preferences.ui.UiSettingModel
 import su.afk.kemonos.utils.withIo
 import java.io.File
 import javax.inject.Inject
@@ -32,14 +31,22 @@ internal class DownloadWebpConverter @Inject constructor(
     @param:ApplicationContext private val context: Context,
 ) {
 
-    suspend fun convert(localUri: String, fileName: String): WebpConversionResult = withIo {
+    suspend fun convert(
+        localUri: String,
+        fileName: String,
+        quality: Int,
+    ): WebpConversionResult = withIo {
         if (!WebpConversionRules.shouldConvert(fileName)) return@withIo WebpConversionResult.Skipped
 
-        runCatching { convertBlocking(localUri, fileName) }
+        runCatching { convertBlocking(localUri, fileName, quality) }
             .getOrElse { WebpConversionResult.Failed(it) }
     }
 
-    private fun convertBlocking(localUri: String, fileName: String): WebpConversionResult {
+    private fun convertBlocking(
+        localUri: String,
+        fileName: String,
+        quality: Int,
+    ): WebpConversionResult {
         val sourceUri = localUri.toUri()
         val originalSize = sourceUri.sizeBytes()
 
@@ -48,7 +55,7 @@ internal class DownloadWebpConverter @Inject constructor(
         } ?: return WebpConversionResult.Skipped
 
         val encoded = try {
-            encodeToCache(bitmap, fileName)
+            encodeToCache(bitmap, fileName, quality)
         } finally {
             bitmap.recycle()
         }
@@ -74,7 +81,7 @@ internal class DownloadWebpConverter @Inject constructor(
         )
     }
 
-    private fun encodeToCache(bitmap: Bitmap, fileName: String): File {
+    private fun encodeToCache(bitmap: Bitmap, fileName: String, quality: Int): File {
         val target = File(context.cacheDir, "webp-${System.nanoTime()}-$fileName.webp")
         val format = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Bitmap.CompressFormat.WEBP_LOSSY
@@ -84,7 +91,7 @@ internal class DownloadWebpConverter @Inject constructor(
         }
 
         target.outputStream().use { output ->
-            bitmap.compress(format, UiSettingModel.DOWNLOAD_WEBP_QUALITY, output)
+            bitmap.compress(format, quality, output)
         }
         return target
     }

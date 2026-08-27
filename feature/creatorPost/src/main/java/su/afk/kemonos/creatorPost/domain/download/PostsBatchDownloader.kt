@@ -1,5 +1,9 @@
 package su.afk.kemonos.creatorPost.domain.download
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import su.afk.kemonos.creatorPost.api.download.BatchDownloadRequest
 import su.afk.kemonos.creatorPost.api.download.BatchDownloadResult
 import su.afk.kemonos.creatorPost.api.download.IPostsBatchDownloader
@@ -10,6 +14,7 @@ import su.afk.kemonos.preferences.domainResolver.mediaUrlSchemeByService
 import su.afk.kemonos.utils.download.numberedFileName
 import su.afk.kemonos.utils.withIo
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Ставит в очередь файлы нескольких постов одной пачкой.
@@ -18,11 +23,19 @@ import javax.inject.Inject
  * идут в том же порядке, что и на странице: только так сквозная нумерация
  * `1.png, 2.png, ...` совпадает с тем, что пользователь видел глазами.
  */
+@Singleton
 internal class PostsBatchDownloader @Inject constructor(
     private val getPost: GetPostUseCase,
     private val domainResolver: IDomainResolver,
     private val downloadUtil: IDownloadUtil,
 ) : IPostsBatchDownloader {
+
+    /** Живёт столько же, сколько процесс: пачку не должно ронять закрытие экрана. */
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override fun start(request: BatchDownloadRequest) {
+        scope.launch { runCatching { enqueue(request) } }
+    }
 
     override suspend fun enqueue(request: BatchDownloadRequest): BatchDownloadResult = withIo {
         val fallbackBaseUrl = domainResolver.fileBaseUrlByService(request.service)

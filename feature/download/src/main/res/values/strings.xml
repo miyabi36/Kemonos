@@ -47,4 +47,7 @@
     <string name="downloads_action_delete">Delete</string>
     <string name="downloads_action_delete_completed">Delete all completed downloads</string>
     <string name="downloads_actions">Download actions</string>
+    <string name="downloads_notification_channel">Download progress</string>
+    <string name="downloads_notification_title">Downloading</string>
+    <string name="downloads_notification_progress">%1$d of %2$d done</string>
 </resources>

@@ -7,6 +7,7 @@ import androidx.core.net.toUri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import su.afk.kemonos.download.api.IDownloadUtil
+import su.afk.kemonos.download.notification.DownloadProgressNotifier
 import su.afk.kemonos.preferences.ui.DownloadFolderMode
 import su.afk.kemonos.preferences.ui.IUiSettingUseCase
 import su.afk.kemonos.storage.api.repository.download.ITrackedDownloadsRepository
@@ -25,6 +26,7 @@ internal class DownloadUtil @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val uiSetting: IUiSettingUseCase,
     private val trackedDownloadsRepository: ITrackedDownloadsRepository,
+    private val progressNotifier: DownloadProgressNotifier,
 ) : IDownloadUtil {
 
     override suspend fun enqueueSystemDownload(
@@ -40,8 +42,20 @@ internal class DownloadUtil @Inject constructor(
 
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
 
+        /**
+         * Своё общее уведомление заменяет штатные только если нам вообще
+         * разрешено уведомлять — иначе пользователь остался бы вовсе без них.
+         */
+        val useSingleNotification = settings.downloadSingleNotification && progressNotifier.canNotify()
+
         val request = DownloadManager.Request(url.toUri())
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setNotificationVisibility(
+                if (useSingleNotification) {
+                    DownloadManager.Request.VISIBILITY_HIDDEN
+                } else {
+                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+                }
+            )
             .setAllowedOverMetered(true)
             .setAllowedOverRoaming(true)
 
@@ -89,6 +103,10 @@ internal class DownloadUtil @Inject constructor(
                 subDir = subDir,
             )
         )
+
+        if (useSingleNotification) {
+            progressNotifier.refresh()
+        }
 
         return id
     }

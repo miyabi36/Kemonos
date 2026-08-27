@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import su.afk.kemonos.download.domain.repository.DownloadManagerDataSource
+import su.afk.kemonos.download.notification.DownloadProgressNotifier
 import su.afk.kemonos.download.webp.DownloadWebpConverter
 import su.afk.kemonos.download.webp.WebpConversionResult
 import su.afk.kemonos.preferences.ui.IUiSettingUseCase
@@ -25,6 +26,7 @@ internal interface DownloadCompleteEntryPoint {
     fun downloadManagerDataSource(): DownloadManagerDataSource
     fun trackedDownloadsRepository(): ITrackedDownloadsRepository
     fun webpConverter(): DownloadWebpConverter
+    fun progressNotifier(): DownloadProgressNotifier
     fun uiSetting(): IUiSettingUseCase
 }
 
@@ -53,6 +55,10 @@ internal class DownloadCompleteReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
+                val settings = entryPoint.uiSetting().prefs.first()
+                if (settings.downloadSingleNotification) {
+                    entryPoint.progressNotifier().refresh()
+                }
                 entryPoint.convertIfEnabled(downloadId)
             } finally {
                 pendingResult.finish()
@@ -61,7 +67,8 @@ internal class DownloadCompleteReceiver : BroadcastReceiver() {
     }
 
     private suspend fun DownloadCompleteEntryPoint.convertIfEnabled(downloadId: Long) {
-        if (!uiSetting().prefs.first().downloadConvertToWebp) return
+        val settings = uiSetting().prefs.first()
+        if (!settings.downloadConvertToWebp) return
 
         /** Чужие загрузки нас не касаются. */
         val tracked = trackedDownloadsRepository().observeAll().first()
@@ -76,7 +83,11 @@ internal class DownloadCompleteReceiver : BroadcastReceiver() {
             ?: tracked.fileName?.takeIf { it.isNotBlank() }
             ?: return
 
-        val result = webpConverter().convert(localUri = localUri, fileName = fileName)
+        val result = webpConverter().convert(
+            localUri = localUri,
+            fileName = fileName,
+            quality = settings.downloadWebpQuality,
+        )
         if (result is WebpConversionResult.Converted) {
             /** Список загрузок должен показывать то имя, что реально лежит на диске. */
             trackedDownloadsRepository().upsert(tracked.copy(fileName = result.fileName))

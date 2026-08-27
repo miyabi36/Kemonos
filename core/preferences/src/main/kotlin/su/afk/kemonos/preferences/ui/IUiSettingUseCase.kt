@@ -123,6 +123,12 @@ interface IUiSettingUseCase {
     /** Пережимать ли скачанные картинки в webp */
     suspend fun setDownloadConvertToWebp(value: Boolean)
 
+    /** Качество webp при пережатии */
+    suspend fun setDownloadWebpQuality(value: Int)
+
+    /** Одно общее уведомление о загрузках вместо уведомления на каждый файл */
+    suspend fun setDownloadSingleNotification(value: Boolean)
+
     /** Использовать внешнее хранилище метадатнных */
     suspend fun setUseExternalMetaData(value: Boolean)
 

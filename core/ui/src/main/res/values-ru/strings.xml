@@ -64,8 +64,7 @@
     <string name="batch_download_include_covers_hint">Сразу для всех выбранных работ</string>
     <string name="batch_download_confirm">Скачать</string>
     <string name="batch_download_cancel">Отмена</string>
-    <string name="batch_download_started">В очереди %1$d файлов из %2$d работ</string>
-    <string name="batch_download_started_with_errors">В очереди %1$d файлов из %2$d работ, %3$d не удалось загрузить</string>
+    <string name="batch_download_started">%1$d работ в очереди — качаются в фоне</string>
     <string name="video_open_failed">Нет приложения для видео, установите VLC</string>
     <string name="audio_open_failed">Нет приложения для аудио</string>
 

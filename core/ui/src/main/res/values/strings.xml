@@ -64,8 +64,7 @@
     <string name="batch_download_include_covers_hint">Applies to every selected work</string>
     <string name="batch_download_confirm">Download</string>
     <string name="batch_download_cancel">Cancel</string>
-    <string name="batch_download_started">%1$d files from %2$d works queued</string>
-    <string name="batch_download_started_with_errors">%1$d files from %2$d works queued, %3$d could not be loaded</string>
+    <string name="batch_download_started">%1$d works queued — downloading in the background</string>
     <string name="video_open_failed">No video app found, install VLC</string>
     <string name="audio_open_failed">No audio app found</string>
 
