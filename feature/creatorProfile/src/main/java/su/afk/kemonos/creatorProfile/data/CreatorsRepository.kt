@@ -28,6 +28,7 @@ import su.afk.kemonos.domain.SelectedSite
 import su.afk.kemonos.domain.models.PostDomain
 import su.afk.kemonos.domain.models.Tag
 import su.afk.kemonos.network.util.call
+import su.afk.kemonos.creatorProfile.data.similar.PawchiveSimilarCreators
 import su.afk.kemonos.network.util.safeCallOrNull
 import su.afk.kemonos.preferences.site.ISelectedSiteUseCase
 import su.afk.kemonos.storage.api.repository.community.CommunityCacheType
@@ -39,6 +40,7 @@ import javax.inject.Inject
 
 internal class CreatorsRepository @Inject constructor(
     private val api: CreatorProfileApi,
+    private val pawchiveSimilarCreators: PawchiveSimilarCreators,
     private val cacheStore: IStoreCreatorProfileRepository,
     private val communityCacheStore: IStoreCommunityRepository,
     private val cacheJson: CreatorProfileCacheJson,
@@ -232,13 +234,17 @@ internal class CreatorsRepository @Inject constructor(
         cacheStore.getFreshJsonOrNull(site, service, id, CreatorProfileCacheType.SIMILAR)
             ?.let { return cacheJson.similarFromJson(it) }
 
-        val fromNet = if (site == SelectedSite.O) {
-            safeCallOrNull(
+        val fromNet = when (site) {
+            SelectedSite.O -> safeCallOrNull(
                 api = { api.getOnlyHavenSimilar(service, id) },
                 mapper = { page -> page.creators.orEmpty().map { it.toOnlyHavenSimilarDomain() } }
             )
-        } else {
-            safeCallOrNull(
+
+            /** У pawchive такого эндпоинта нет — список выводим из общих тегов. */
+            SelectedSite.P -> pawchiveSimilarCreators.find(service = service, id = id)
+                .takeIf { it.isNotEmpty() }
+
+            else -> safeCallOrNull(
                 api = { api.getProfileRecommended(service, id) },
                 mapper = { dto -> dto.toDomain() }
             )

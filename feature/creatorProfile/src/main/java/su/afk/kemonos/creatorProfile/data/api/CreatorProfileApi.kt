@@ -106,6 +106,19 @@ internal interface CreatorProfileApi {
         @Path("id") id: String,
     ): Response<List<ProfileLinksDto>>
 
+    /**
+     * Поиск постов по тегу.
+     *
+     * У pawchive нет эндпоинта похожих авторов, поэтому их приходится выводить
+     * из общих тегов: этот запрос отвечает, кто ещё публикует по такому тегу.
+     */
+    @HeaderText
+    @GET("v1/posts")
+    suspend fun getPostsByTag(
+        @Query("tag") tag: String,
+        @Query("o") offset: Int? = null,
+    ): Response<List<PostUnifiedDto>>
+
     /** Similar creators */
     @HeaderText
     @GET("v1/{service}/user/{id}/recommended")
