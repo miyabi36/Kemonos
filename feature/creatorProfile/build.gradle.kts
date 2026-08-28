@@ -31,4 +31,6 @@ dependencies {
     implementation(project(":feature:creatorPost-api"))
     implementation(project(":feature:commonScreen-api"))
     implementation(project(":feature:download-api"))
+
+    testImplementation(libs.junit)
 }
